@@ -1,518 +1,489 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Virtual Try-On — Login & Register</title>
+<title>Virtual Try-On · Login / Register</title>
 <style>
   :root{
-    --bg1:#070a1a;
-    --bg2:#0f1530;
-    --card:#0f1724cc;
-    --accent:#ff6b81;
-    --accent-2:#6be3ff;
-    --glass: rgba(255,255,255,0.06);
-    --glass-2: rgba(255,255,255,0.03);
-    --text:#e9f0ff;
-    --muted:#b7c2d9;
-    --success:#39d98a;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%; margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-  body{
-    background: radial-gradient(1200px 600px at 10% 10%, rgba(107,227,255,0.06), transparent 10%),
-                radial-gradient(800px 400px at 90% 90%, rgba(255,107,129,0.04), transparent 10%),
-                linear-gradient(180deg,var(--bg1),var(--bg2));
-    color:var(--text);
-    overflow:hidden;
-    -webkit-font-smoothing:antialiased;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:32px;
+    --bg:#071428;
+    --card:#0f1b2a;
+    --accent:#7be5c3;
+    --muted:#9fb3c8;
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.02);
+    --glass-border: rgba(255,255,255,0.06);
+    --glass-blur: 8px;
+    --shadow: 0 10px 30px rgba(2,6,23,0.7);
   }
 
-  /* Animated floating icons background */
-  .scene{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-  }
-  .float{
-    position:absolute;
-    width:120px;
-    height:120px;
-    opacity:.15;
-    transform-origin:center;
-    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
-    animation:floatUp linear infinite;
-  }
-  .float svg{width:100%; height:100%;}
-  /* different speeds and places */
-  .f1{left:6%; top:20%; animation-duration:22s; transform:scale(1.2) rotate(-10deg);}
-  .f2{left:80%; top:8%; animation-duration:28s; transform:scale(.9) rotate(8deg);}
-  .f3{left:20%; top:70%; animation-duration:18s; transform:scale(.8) rotate(12deg);}
-  .f4{left:72%; top:64%; animation-duration:25s; transform:scale(1.05) rotate(-6deg);}
-  .f5{left:50%; top:40%; animation-duration:20s; transform:scale(.7) rotate(6deg); opacity:.12;}
-  @keyframes floatUp{
-    0%{transform: translateY(0) rotate(0deg) scale(1);}
-    50%{transform: translateY(-32px) rotate(12deg) scale(.98);}
-    100%{transform: translateY(0) rotate(0deg) scale(1);}
-  }
+  *{box-sizing:border-box; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: #e8f6f4}
+  html,body{height:100%; margin:0; background: radial-gradient(1200px 700px at 10% 20%, rgba(123,229,195,0.06), transparent 8%),
+                                     radial-gradient(800px 500px at 90% 80%, rgba(123,229,195,0.03), transparent 10%),
+                                     var(--bg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
 
-  /* Main card */
+  /* Container */
   .wrap{
-    width:980px;
-    max-width:98vw;
-    display:grid;
-    grid-template-columns: 1fr 420px;
-    gap:28px;
-    align-items:center;
-    z-index:2;
+    min-height:100vh; display:grid; place-items:center; padding:40px;
+    position:relative; overflow:hidden;
   }
 
-  .showcase{
-    padding:36px;
-    border-radius:18px;
+  /* Background stage for animated floating items */
+  .stage{
+    position:absolute; inset:0; pointer-events:none; z-index:0;
+  }
+
+  /* Floating items shared */
+  .float {
+    position:absolute; width:120px; height:120px; opacity:.95; transform-origin:center;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.45));
+  }
+  .float svg{width:100%; height:100%; display:block}
+
+  /* Different animation durations & sizes for depth */
+  .f-slow{ animation: floatUpDown 12s ease-in-out infinite; transform: translateY(0); }
+  .f-med { animation: floatUpDown 9s ease-in-out infinite reverse; }
+  .f-fast{ animation: floatUpDown 6.5s ease-in-out infinite; }
+
+  .depth-1{ transform: translateZ(0) scale(.9); opacity:.9; }
+  .depth-2{ transform: translateZ(0) scale(1.0); opacity:1; }
+  .depth-3{ transform: translateZ(0) scale(0.78); opacity:.85; }
+
+  @keyframes floatUpDown {
+    0% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-26px) rotate(3deg); }
+    100%{ transform: translateY(0) rotate(-3deg); }
+  }
+
+  /* subtle horizontal drift per item */
+  .drift1{ animation: driftX 18s linear infinite; }
+  .drift2{ animation: driftX 26s linear infinite reverse; }
+  @keyframes driftX { 0%{ transform: translateX(0) } 50%{ transform: translateX(24px) } 100%{ transform: translateX(0) } }
+
+  /* particle grid / shimmer */
+  .shimmer{
+    position:absolute; inset:0; background-image:
+      radial-gradient(circle at 10% 10%, rgba(255,255,255,0.012) 0 1px, transparent 2px),
+      radial-gradient(circle at 80% 50%, rgba(255,255,255,0.01) 0 1px, transparent 2px);
+    mix-blend-mode:screen; z-index:0; pointer-events:none;
+  }
+
+  /* card */
+  .card {
+    width:960px; max-width:1000px; min-height:520px; background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.01));
+    border-radius:20px; border:1px solid var(--glass-border);
+    box-shadow: var(--shadow); padding:28px; display:grid; grid-template-columns: 1fr 420px; gap:28px; position:relative; z-index:2;
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  /* left - hero / promo */
+  .hero {
+    padding:28px; display:flex; flex-direction:column; justify-content:center; gap:18px;
+  }
+  .brand {
+    display:flex; align-items:center; gap:14px;
+  }
+  .logo-blob{
+    width:64px; height:64px; border-radius:14px; background: linear-gradient(135deg,var(--accent), #5ad1f5); display:grid; place-items:center; color:#01343a; font-weight:700; font-size:20px;
+    box-shadow: 0 6px 18px rgba(11,40,35,0.35); border:1px solid rgba(255,255,255,0.06);
+  }
+  .title{ font-size:22px; font-weight:700; color:white; letter-spacing:.2px; }
+  .subtitle{ color:var(--muted); font-size:13px; margin-top:-4px; }
+
+  .hero-visual{
+    margin-top:8px; min-height:240px; position:relative; border-radius:14px; overflow:hidden;
     background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-    backdrop-filter: blur(6px) saturate(120%);
-    min-height:420px;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
+    border:1px solid rgba(255,255,255,0.03);
+    display:grid; place-items:center;
   }
 
-  .showcase h1{
-    margin:0;
-    font-size:26px;
-    letter-spacing:0.2px;
+  .hero-visual .mock-mirror{
+    width:80%; height:80%; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    border:1px dashed rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; gap:12px; flex-direction:column;
+    color:var(--muted); font-size:13px; padding:18px; text-align:center;
   }
-  .showcase p{ color:var(--muted); margin:0; font-size:14px; line-height:1.4}
 
-  .showcase .visual{
-    margin-top:auto;
-    display:flex;
-    gap:12px;
-    align-items:center;
-    justify-content:flex-start;
+  /* right - form column */
+  .forms {
+    padding:18px; display:flex; align-items:center; justify-content:center;
   }
-  .card{
-    background: linear-gradient(180deg,var(--card), rgba(10,14,26,0.7));
-    padding:28px;
-    border-radius:14px;
-    width:100%;
-    max-width:420px;
-    box-shadow: 0 12px 40px rgba(2,6,23,0.6);
-    border: 1px solid rgba(255,255,255,0.03);
-    transform-origin:center;
-    transition: transform .45s cubic-bezier(.2,.9,.3,1);
-  }
-  .card:hover{ transform: translateY(-6px) scale(1.01); }
 
-  /* Form styles */
-  form{ display:flex; flex-direction:column; gap:12px; }
-  label{ font-size:13px; color:var(--muted); }
+  .form-shell {
+    width:100%; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.03);
+  }
+
+  h2{ margin:0 0 8px 0; font-size:20px }
+  p.lead{ margin:0 0 18px 0; color:var(--muted); font-size:13px; }
+
+  .input-group{ margin-bottom:14px; position:relative; }
+  label{ display:block; font-size:12px; margin-bottom:6px; color:var(--muted) }
   input[type="text"], input[type="email"], input[type="password"]{
-    width:100%;
-    padding:12px 44px 12px 14px;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,0.04);
-    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-    color:var(--text);
-    outline:none;
-    font-size:15px;
-    transition: box-shadow .18s, border-color .18s, transform .12s;
-    position:relative;
+    width:100%; padding:12px 44px 12px 12px; background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.04);
+    color: #eaf9f1; outline:none; font-size:14px;
   }
-  input:focus{ box-shadow: 0 8px 18px rgba(10,14,26,0.5); border-color: rgba(107,227,255,0.24); transform: translateY(-1px); }
+  .input-row{ display:flex; gap:10px; }
+  .small{ width:48%; }
 
-  .field{
-    position:relative;
-  }
   /* eye button */
   .eye-btn{
-    position:absolute;
-    right:8px;
-    top:50%;
-    transform:translateY(-50%);
-    width:36px; height:36px;
-    display:inline-grid;
-    place-items:center;
-    border-radius:8px;
-    background:transparent;
-    border:none;
-    cursor:pointer;
-    color:var(--muted);
-    transition: background .18s;
+    position:absolute; right:10px; top:36px; width:36px; height:36px; border-radius:8px; display:grid; place-items:center;
+    border:1px solid rgba(255,255,255,0.03); cursor:pointer; background:var(--glass-2);
   }
-  .eye-btn:hover{ background:var(--glass); color:var(--text); }
-
-  .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; }
-  .muted{ font-size:13px; color:var(--muted); }
+  .eye-btn svg{ width:18px; height:18px; display:block; opacity:.95 }
 
   .btn{
-    display:inline-block;
-    border:0;
-    padding:12px 18px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:600;
-    letter-spacing:.2px;
-    transition: transform .12s, box-shadow .12s;
+    display:inline-block; padding:12px 18px; border-radius:10px; border:none; cursor:pointer; font-weight:600;
   }
+
   .btn-primary{
-    background: linear-gradient(90deg,var(--accent),var(--accent-2));
-    color:#071029;
-    box-shadow: 0 8px 26px rgba(107,227,255,0.08);
+    background: linear-gradient(90deg,var(--accent), #5ad1f5); color:#01282a; border:0; box-shadow: 0 8px 20px rgba(12,45,42,0.18);
   }
-  .btn-primary:active{ transform: translateY(2px); }
-  .btn-ghost{
-    background:transparent;
-    color:var(--text);
-    border:1px solid rgba(255,255,255,0.04);
+  .btn-ghost{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03) }
+
+  .switcher{ display:flex; gap:8px; align-items:center; margin-top:10px; color:var(--muted) }
+  .switcher button{ background:transparent; border:none; color:var(--accent); cursor:pointer; font-weight:700; padding:6px 8px; border-radius:8px; }
+
+  /* little helper text & links */
+  .muted{ color:var(--muted); font-size:13px; margin-top:8px; }
+
+  /* success / error box (client-only) */
+  .msg{ margin-top:10px; padding:10px 12px; border-radius:8px; font-size:13px; display:none; }
+  .msg.show{ display:block; }
+
+  .msg.success{ background: rgba(123,229,195,0.08); color: #bff0da; border:1px solid rgba(123,229,195,0.12) }
+  .msg.error{ background: rgba(255,110,110,0.06); color: #ffdfe0; border:1px solid rgba(255,110,110,0.08) }
+
+  /* responsive */
+  @media (max-width:980px){
+    .card{ grid-template-columns: 1fr; padding:18px; min-height:auto; width:92%; }
+    .hero-visual{ display:none }
   }
-
-  .toggle-links{ display:flex; gap:8px; align-items:center; justify-content:flex-end; }
-
-  .switcher { font-size:13px; color:var(--muted); cursor:pointer; text-decoration:underline; }
-
-  .social-row{ display:flex; gap:10px; margin-top:4px }
-  .social{
-    padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03);
-    background:var(--glass-2); color:var(--text); cursor:pointer; font-size:13px;
-  }
-
-  /* password strength */
-  .strength{
-    height:8px; border-radius:8px; background:rgba(255,255,255,.03); overflow:hidden;
-  }
-  .strength > i{ display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .22s; }
-
-  /* small footer note */
-  .note{ font-size:12px; color:var(--muted); margin-top:10px; }
-
-  /* Responsive */
-  @media (max-width:880px){
-    .wrap{ grid-template-columns: 1fr; gap:20px; padding:12px; }
-    .showcase{ order:2; }
+  @media (max-width:560px){
+    .input-row{ flex-direction:column; }
+    .small{ width:100% }
   }
 
-  /* subtle animated product cards in showcase */
-  .tryon-card{
-    width:140px; height:160px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));
-    display:flex; flex-direction:column; gap:8px; padding:12px; align-items:center; justify-content:center;
-    transform-origin:center;
-    transition: transform .26s cubic-bezier(.2,.9,.3,1), box-shadow .2s;
-    border:1px solid rgba(255,255,255,0.02);
+  /* tiny floating highlight near form */
+  .glow-orb{
+    position:absolute; right:46%; top:-40px; width:320px; height:320px; border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, rgba(123,229,195,0.08), transparent 25%),
+                radial-gradient(circle at 70% 70%, rgba(90,209,245,0.06), transparent 18% );
+    filter: blur(30px); z-index:1; pointer-events:none; mix-blend-mode:screen;
   }
-  .tryon-card:hover{ transform: translateY(-8px) scale(1.03); box-shadow: 0 18px 40px rgba(2,6,23,0.6); }
-  .tryon-card svg{ width:64px; height:64px; opacity:0.95; }
-  .tryon-caption{ font-size:13px; color:var(--muted); text-align:center; }
 
-  /* little decorative underline */
-  .accent-underline{ height:4px; width:80px; border-radius:6px; background: linear-gradient(90deg,var(--accent),var(--accent-2)); margin-top:6px; }
+  /* subtle footer */
+  .small-foot{ font-size:12px; color:var(--muted); text-align:center; margin-top:14px }
 </style>
 </head>
 <body>
-  <!-- Floating icons scene -->
-  <div class="scene" aria-hidden="true">
-    <div class="float f1" title="dress">
-      <!-- Dress SVG -->
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 6c6 0 11 8 20 8s14-8 20-8c-3 9-8 18-12 24 0 0-8 8-8 8s-6-8-8-8C16 24 11 15 8 6z" fill="#ff6b81"/>
-        <path d="M22 34s4 10 10 10 10-10 10-10" stroke="#fff" stroke-opacity="0.08" stroke-width="2"/>
+<div class="wrap">
+
+  <div class="stage" aria-hidden="true">
+    <!-- Floating decorative SVGs positioned across the background -->
+    <!-- Dress -->
+    <div class="float f-slow depth-1 drift1" style="left:6%; top:12%; width:120px; opacity:0.95">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M22 6c2 3 6 4 10 4s8-1 10-4c0 0 6 2 6 8s-4 14-8 16c0 0-4 3-8 3s-8-3-8-3c-4-2-8-11-8-16s6-8 6-8z" fill="#ffd7e0"/>
+        <path d="M20 36c2 3 6 6 12 6s10-3 12-6" stroke="#ff9bb2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="32" cy="12" r="1.4" fill="#ff7aa2"/>
       </svg>
     </div>
-    <div class="float f2" title="shoe">
-      <!-- Shoe SVG -->
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 38c6-8 18-10 30-8 6 1 12 5 18 3 0 0-3 10-10 12-7 2-16 2-26 0-8-2-14-9-12-7z" fill="#6be3ff"/>
-        <path d="M20 30c8-2 14-2 22 2" stroke="#fff" stroke-opacity="0.08" stroke-width="2"/>
+
+    <!-- Shoe -->
+    <div class="float f-med depth-2 drift2" style="left:78%; top:18%; width:100px; opacity:0.95">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 38c0-9 9-10 18-10 12 0 20 6 22 8 2 2 4 8-2 12-10 6-44 0-38-10z" fill="#ffe4b8"/>
+        <path d="M12 36c10 2 32 6 38 6" stroke="#ffcc7b" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
     </div>
-    <div class="float f3" title="hat">
-      <!-- Hat SVG -->
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="32" cy="36" rx="22" ry="6" fill="#c8a1ff"/>
-        <path d="M12 36c0-10 8-18 20-18s20 8 20 18" fill="#a37bff"/>
+
+    <!-- Hanger -->
+    <div class="float f-fast depth-3 drift1" style="left:36%; top:8%; width:84px; opacity:0.85">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M32 6c3 0 5 2 5 4v2" stroke="#8fead1" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M8 32c6-12 36-12 48 0" stroke="#6fe0c4" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M12 32c6 12 36 12 48 0" stroke="#60cdb3" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.18"/>
       </svg>
     </div>
-    <div class="float f4" title="glasses">
-      <!-- Glasses SVG -->
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="6" y="22" width="18" height="14" rx="4" fill="#ffd76b"/>
-        <rect x="40" y="22" width="18" height="14" rx="4" fill="#ffd76b"/>
-        <path d="M24 29h16" stroke="#fff" stroke-opacity="0.08" stroke-width="2"/>
+
+    <!-- Mirror -->
+    <div class="float f-slow depth-2 drift2" style="left:16%; top:58%; width:110px; opacity:0.92">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="6" width="48" height="36" rx="6" fill="#e9fbf6" opacity="0.06"/>
+        <rect x="8" y="6" width="48" height="36" rx="6" stroke="#8fead1" stroke-width="1.4" fill="none"/>
+        <path d="M24 48h16v4H24z" fill="#93e9d7"/>
       </svg>
     </div>
-    <div class="float f5" title="bag">
-      <!-- Bag SVG -->
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="12" y="18" width="40" height="30" rx="6" fill="#ff9aa2"/>
-        <path d="M20 18c0-6 4-10 12-10s12 4 12 10" stroke="#fff" stroke-opacity="0.08" stroke-width="2"/>
+
+    <!-- tiny clothing icons scattered -->
+    <div class="float f-med depth-1" style="left:86%; top:74%; width:64px; opacity:0.85">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 22c4 2 8 2 16 2s12 0 16-2" stroke="#fff" stroke-opacity="0.4" stroke-width="1.6" fill="none"/>
+        <path d="M22 46c6 0 14 1 20 0" stroke="#7be5c3" stroke-width="1.6" stroke-linecap="round" fill="none"/>
       </svg>
+    </div>
+
+    <div class="shimmer"></div>
+  </div>
+
+  <div class="card" role="main" aria-label="Authentication card">
+    <div class="hero" aria-hidden="false">
+      <div class="brand">
+        <div class="logo-blob">VT</div>
+        <div>
+          <div class="title">Virtual Try-On</div>
+          <div class="subtitle">Try clothes & shoes virtually — silky smooth preview animations</div>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mock-mirror">
+          <div style="font-weight:700; color:white">Live Try-On Mirror</div>
+          <div style="color:var(--muted); font-size:13px">Preview outfits at a glance — animated fit & motion</div>
+          <svg width="110" height="110" viewBox="0 0 64 64" style="opacity:0.9">
+            <g>
+              <rect x="0" y="0" width="64" height="64" rx="8" fill="transparent"/>
+              <path d="M18 42c0-14 28-14 28 0" stroke="#7be5c3" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+              <path d="M16 20c4-6 12-6 16-6s12 0 16 6" stroke="#5ad1f5" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="glow-orb" aria-hidden="true"></div>
+    </div>
+
+    <div class="forms" aria-hidden="false">
+      <div class="form-shell" role="form" aria-labelledby="auth-heading">
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div>
+            <h2 id="auth-heading">Welcome back</h2>
+            <p class="lead" id="leadText">Sign in to access your try-on history, saved looks and favorites.</p>
+          </div>
+
+          <div style="text-align:right; color:var(--muted); font-size:12px;">
+            <div>Need an account?</div>
+            <div class="switcher"><span class="muted">Or</span><button id="toggleToRegister" aria-controls="registerForm">Register →</button></div>
+          </div>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" style="margin-top:12px;">
+          <div class="input-group">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" placeholder="you@domain.com" required />
+          </div>
+
+          <div class="input-group">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" placeholder="Enter your password" required />
+            <button type="button" class="eye-btn" aria-label="Show password" data-target="loginPassword" title="Show/Hide password">
+              <!-- eye (open) icon -->
+              <svg id="eye-open-login" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="eye-closed-login" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
+                <path d="M1 1l22 22"/>
+              </svg>
+            </button>
+          </div>
+
+          <div style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+            <label style="display:flex; gap:8px; align-items:center; font-size:13px">
+              <input id="remember" type="checkbox" style="transform:scale(1.05)" /> <span style="color:var(--muted)">Remember me</span>
+            </label>
+            <a href="#" style="margin-left:auto; color:var(--accent); text-decoration:none; font-weight:600; font-size:13px">Forgot?</a>
+          </div>
+
+          <div style="margin-top:16px; display:flex; gap:8px;">
+            <button class="btn btn-primary" type="submit">Sign in</button>
+            <button type="button" id="quickGuest" class="btn btn-ghost">Try Guest</button>
+          </div>
+
+          <div id="loginMsg" class="msg"></div>
+        </form>
+
+        <!-- REGISTER FORM (hidden by default) -->
+        <form id="registerForm" style="margin-top:12px; display:none;">
+          <div class="input-row">
+            <div class="input-group small">
+              <label for="regName">Full name</label>
+              <input id="regName" type="text" placeholder="Jane Doe" required />
+            </div>
+            <div class="input-group small">
+              <label for="regUser">Username</label>
+              <input id="regUser" type="text" placeholder="username" required />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="regEmail">Email</label>
+            <input id="regEmail" type="email" placeholder="you@domain.com" required />
+          </div>
+
+          <div class="input-row">
+            <div class="input-group small">
+              <label for="regPassword">Password</label>
+              <input id="regPassword" type="password" placeholder="Create password" required />
+              <button type="button" class="eye-btn" aria-label="Show password" data-target="regPassword" title="Show/Hide password">
+                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
+                  <path d="M1 1l22 22"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="input-group small">
+              <label for="regConfirm">Confirm</label>
+              <input id="regConfirm" type="password" placeholder="Confirm password" required />
+              <button type="button" class="eye-btn" aria-label="Show confirm password" data-target="regConfirm" title="Show/Hide password">
+                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
+                  <path d="M1 1l22 22"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; gap:8px; margin-top:8px;">
+            <div style="color:var(--muted); font-size:13px">By registering you agree to <a href="#" style="color:var(--accent); text-decoration:none">terms</a>.</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-ghost" type="button" id="backToLogin">Back</button>
+              <button class="btn btn-primary" type="submit">Create account</button>
+            </div>
+          </div>
+
+          <div id="registerMsg" class="msg"></div>
+        </form>
+
+      </div>
     </div>
   </div>
 
-  <main class="wrap" role="main">
-    <!-- Left showcase -->
-    <section class="showcase" aria-label="Try-on showcase">
-      <h1>Virtual Try-On Lab</h1>
-      <p>Try outfits, shoes, and accessories virtually — preview looks before you shop. Login to save your try-ons or create an account to start building looks.</p>
+  <div class="small-foot">Built for demo • Virtual Try-On theme • Password toggle with eye icon</div>
 
-      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;" class="visual" aria-hidden="true">
-        <div class="tryon-card" title="Try on dresses">
-          <!-- small dress svg -->
-          <svg viewBox="0 0 64 64"><path d="M8 6c6 0 11 8 20 8s14-8 20-8c-3 9-8 18-12 24 0 0-8 8-8 8s-6-8-8-8C16 24 11 15 8 6z" fill="#ff6b81"/></svg>
-          <div class="tryon-caption">Dresses</div>
-        </div>
-
-        <div class="tryon-card" title="Try on shoes">
-          <svg viewBox="0 0 64 64"><path d="M6 38c6-8 18-10 30-8 6 1 12 5 18 3 0 0-3 10-10 12-7 2-16 2-26 0-8-2-14-9-12-7z" fill="#6be3ff"/></svg>
-          <div class="tryon-caption">Shoes</div>
-        </div>
-
-        <div class="tryon-card" title="Accessories">
-          <svg viewBox="0 0 64 64"><rect x="6" y="22" width="18" height="14" rx="4" fill="#ffd76b"/><rect x="40" y="22" width="18" height="14" rx="4" fill="#ffd76b"/></svg>
-          <div class="tryon-caption">Glasses & Hats</div>
-        </div>
-      </div>
-
-      <div style="margin-top:18px;">
-        <div class="accent-underline" aria-hidden="true"></div>
-        <p class="note">Tip: Use strong unique passwords. Toggle the eye icon inside the password field to reveal/hide.</p>
-      </div>
-    </section>
-
-    <!-- Right auth card -->
-    <section class="card" aria-label="Authentication">
-      <!-- Tabs -->
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-        <div>
-          <div style="font-size:16px; font-weight:700;">Welcome</div>
-          <div style="font-size:13px; color:var(--muted);">Sign in or create an account</div>
-        </div>
-        <div class="toggle-links">
-          <button class="btn btn-ghost" id="github">Sign in with Git</button>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <button id="showLogin" class="btn btn-primary" style="flex:1;">Login</button>
-        <button id="showRegister" class="btn btn-ghost" style="flex:1;">Register</button>
-      </div>
-
-      <!-- Login Form -->
-      <form id="loginForm" autocomplete="on" style="display:block;">
-        <div class="field">
-          <label for="loginEmail">Email</label>
-          <input id="loginEmail" type="email" name="email" placeholder="you@example.com" required />
-        </div>
-
-        <div class="field" style="margin-top:6px;">
-          <label for="loginPass">Password</label>
-          <input id="loginPass" type="password" name="password" placeholder="Enter your password" required />
-          <button class="eye-btn" type="button" aria-label="Show password" data-target="loginPass">
-            <!-- eye SVG -->
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="row" style="margin-top:6px;">
-          <div class="muted"><input id="remember" type="checkbox" /> Remember me</div>
-          <div class="muted">Forgot password?</div>
-        </div>
-
-        <div style="display:flex; gap:8px; margin-top:12px;">
-          <button type="submit" class="btn btn-primary" style="flex:1;">Sign In</button>
-          <button type="button" class="btn btn-ghost" id="guest">Guest</button>
-        </div>
-      </form>
-
-      <!-- Register Form -->
-      <form id="registerForm" autocomplete="on" style="display:none;">
-        <div class="field">
-          <label for="regName">Full name</label>
-          <input id="regName" type="text" name="name" placeholder="Jane Doe" required />
-        </div>
-
-        <div class="field" style="margin-top:6px;">
-          <label for="regEmail">Email</label>
-          <input id="regEmail" type="email" name="email" placeholder="you@example.com" required />
-        </div>
-
-        <div class="field" style="margin-top:6px;">
-          <label for="regPass">Password</label>
-          <input id="regPass" type="password" name="password" placeholder="Create a password" required />
-          <button class="eye-btn" type="button" aria-label="Show password" data-target="regPass">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <div>
-          <label class="muted" style="margin-top:6px;">Password strength</label>
-          <div class="strength" aria-hidden="true"><i id="strengthBar"></i></div>
-        </div>
-
-        <div style="display:flex; gap:8px; margin-top:12px;">
-          <button type="submit" class="btn btn-primary" style="flex:1;">Create account</button>
-          <button type="button" class="btn btn-ghost" id="cancelReg">Cancel</button>
-        </div>
-      </form>
-
-      <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
-        <div style="flex:1; height:1px; background:rgba(255,255,255,0.02)"></div>
-        <div style="font-size:12px; color:var(--muted);">OR</div>
-        <div style="flex:1; height:1px; background:rgba(255,255,255,0.02)"></div>
-      </div>
-
-      <div style="margin-top:12px; display:flex; gap:8px;">
-        <button class="social" title="Continue with Google">Google</button>
-        <button class="social" title="Continue with Facebook">Facebook</button>
-        <button class="social" title="Continue with Apple">Apple</button>
-      </div>
-
-      <div style="margin-top:14px; font-size:12px; color:var(--muted)">
-        By continuing you agree to our <u>Terms</u> and <u>Privacy</u>.
-      </div>
-    </section>
-  </main>
+</div>
 
 <script>
   // Toggle forms
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
-  const showLogin = document.getElementById('showLogin');
-  const showRegister = document.getElementById('showRegister');
-  const cancelReg = document.getElementById('cancelReg');
+  const toggleToRegister = document.getElementById('toggleToRegister');
+  const backToLogin = document.getElementById('backToLogin');
+  const leadText = document.getElementById('leadText');
 
-  function show(which){
-    if(which === 'login'){
-      loginForm.style.display = 'block';
-      registerForm.style.display = 'none';
-      showLogin.classList.add('btn-primary');
-      showLogin.classList.remove('btn-ghost');
-      showRegister.classList.remove('btn-primary');
-      showRegister.classList.add('btn-ghost');
-    } else {
-      loginForm.style.display = 'none';
-      registerForm.style.display = 'block';
-      showRegister.classList.add('btn-primary');
-      showRegister.classList.remove('btn-ghost');
-      showLogin.classList.remove('btn-primary');
-      showLogin.classList.add('btn-ghost');
-    }
-  }
-  showLogin.addEventListener('click', ()=> show('login'));
-  showRegister.addEventListener('click', ()=> show('register'));
-  cancelReg.addEventListener('click', ()=> show('login'));
+  toggleToRegister.addEventListener('click', () => {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    document.getElementById('auth-heading').innerText = 'Create account';
+    leadText.innerText = 'Make an account to save looks, favorites and your try-on snapshots.';
+  });
+  backToLogin.addEventListener('click', () => {
+    registerForm.style.display = 'none';
+    loginForm.style.display = 'block';
+    document.getElementById('auth-heading').innerText = 'Welcome back';
+    leadText.innerText = 'Sign in to access your try-on history, saved looks and favorites.';
+  });
 
-  // Eye toggle for password fields
-  document.querySelectorAll('.eye-btn').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
+  // Eye toggles - support multiple buttons by data-target or same-form open/close
+  document.querySelectorAll('.eye-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
       const targetId = btn.getAttribute('data-target');
-      const inp = document.getElementById(targetId);
-      if(!inp) return;
-      if(inp.type === 'password'){
-        inp.type = 'text';
-        btn.innerHTML = eyeSlashSVG(); // show "eye-off"
-      } else {
-        inp.type = 'password';
-        btn.innerHTML = eyeSVG(); // show "eye"
+      if (!targetId) return;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      const isPwd = input.type === 'password';
+      input.type = isPwd ? 'text' : 'password';
+
+      // toggle icons inside this button
+      const svgOpen = btn.querySelector('[id^="eye-open"], .eye-open');
+      const svgClosed = btn.querySelector('[id^="eye-closed"], .eye-closed');
+      if (svgOpen && svgClosed) {
+        if (isPwd) { svgOpen.style.display = 'none'; svgClosed.style.display = ''; }
+        else { svgOpen.style.display = ''; svgClosed.style.display = 'none'; }
       }
+      // accessibility label update
+      btn.setAttribute('aria-label', input.type === 'password' ? 'Show password' : 'Hide password');
     });
   });
 
-  // Provide SVG markup functions (keeps accessibility)
-  function eyeSVG(){
-    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
-  }
-  function eyeSlashSVG(){
-    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M17.94 17.94A10.97 10.97 0 0 1 12 19c-6 0-10-7-10-7 1.5-3 4-5.22 7.16-6.26" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M22 12s-1.4 3.07-3.53 5.21M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
-  }
-
-  // Init eye buttons to eyeSVG markup (for accessibility to show icon)
-  document.querySelectorAll('.eye-btn').forEach(btn => btn.innerHTML = eyeSVG());
-
-  // Password strength meter for registration
-  const regPass = document.getElementById('regPass');
-  const strengthBar = document.getElementById('strengthBar');
-
-  function calcStrength(p){
-    let score = 0;
-    if(!p) return 0;
-    // length
-    if(p.length >= 8) score += 2;
-    else if(p.length >= 6) score += 1;
-    // variety
-    if(/[a-z]/.test(p)) score++;
-    if(/[A-Z]/.test(p)) score++;
-    if(/[0-9]/.test(p)) score++;
-    if(/[^A-Za-z0-9]/.test(p)) score++;
-    // cap
-    return Math.min(score,6);
-  }
-
-  regPass && regPass.addEventListener('input', (e)=>{
-    const s = calcStrength(e.target.value);
-    const pct = Math.round((s/6)*100);
-    strengthBar.style.width = pct + '%';
-    if(pct < 35) { strengthBar.style.background = 'linear-gradient(90deg,#ff6b6b,#ff9a6b)'; }
-    else if(pct < 70) { strengthBar.style.background = 'linear-gradient(90deg,#ffd76b,#6be3ff)'; }
-    else { strengthBar.style.background = 'linear-gradient(90deg,#39d98a,#6be3ff)'; }
-  });
-
-  // Fake submit handlers (demo)
-  loginForm.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const em = loginForm.querySelector('input[type="email"]').value;
-    alert('Signed in (demo): ' + em);
-    // TODO: replace with real auth
-  });
-
-  registerForm.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const n = document.getElementById('regName').value;
-    alert('Account created (demo): ' + n);
-    show('login');
-  });
-
-  // small improvements: keyboard Enter toggles etc.
-  document.addEventListener('keydown', (ev)=>{
-    if(ev.key === 'Escape') show('login');
-  });
-
-  // small parallax movement for floats when mouse moves
-  const floats = document.querySelectorAll('.scene .float');
-  document.addEventListener('mousemove', (ev)=>{
-    const cx = window.innerWidth/2, cy = window.innerHeight/2;
-    const dx = (ev.clientX - cx)/cx;
-    const dy = (ev.clientY - cy)/cy;
-    floats.forEach((el, i) => {
-      const depth = (i % 3) * 6 + 6; // 6,12,18ish
-      el.style.transform = `translate3d(${dx * depth}px, ${dy * depth * -1}px, 0) ${el.style.transform.match(/rotate$begin:math:text$[^$end:math:text$]+\)/) || ''}`;
+  // A special eye toggle for login's two svg elements that are siblings inside the button:
+  // Hook to sync icons properly on page load if needed.
+  (function syncLoginEye(){
+    const loginEyeBtn = document.querySelector('#loginForm .eye-btn');
+    if (!loginEyeBtn) return;
+    loginEyeBtn.addEventListener('click', () => {
+      const openI = document.getElementById('eye-open-login');
+      const closedI = document.getElementById('eye-closed-login');
+      const input = document.getElementById(loginEyeBtn.dataset.target);
+      if (!input) return;
+      if (input.type === 'password') { openI.style.display = ''; closedI.style.display = 'none'; }
+      else { openI.style.display = 'none'; closedI.style.display = ''; }
     });
+  })();
+
+  // Client-only "fake" auth behavior for demo
+  const loginMsg = document.getElementById('loginMsg');
+  const registerMsg = document.getElementById('registerMsg');
+
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    // fake validation
+    const email = document.getElementById('loginEmail').value.trim();
+    const pwd = document.getElementById('loginPassword').value.trim();
+    if (!email || !pwd) {
+      showMsg(loginMsg, 'Please enter email and password.', 'error'); return;
+    }
+    // demo success
+    showMsg(loginMsg, 'Signed in — demo mode. Redirecting to try-on...', 'success');
+    // NOTE: This is a demo: real implementation should call backend API.
   });
 
-  // make forms accessible: focus first input on load
-  window.addEventListener('load', ()=> {
-    document.getElementById('loginEmail').focus();
+  registerForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const user = document.getElementById('regUser').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const pw = document.getElementById('regPassword').value;
+    const cpw = document.getElementById('regConfirm').value;
+    if (!name || !user || !email || !pw || !cpw) {
+      showMsg(registerMsg, 'Fill all fields.', 'error'); return;
+    }
+    if (pw !== cpw) { showMsg(registerMsg, 'Passwords do not match.', 'error'); return; }
+    if (pw.length < 6) { showMsg(registerMsg, 'Password should be at least 6 characters.', 'error'); return; }
+    showMsg(registerMsg, 'Account created (demo). You can now sign in.', 'success');
+    // auto-switch to login after a short delay (demo)
+    setTimeout(()=> {
+      backToLogin.click();
+    }, 900);
   });
 
+  document.getElementById('quickGuest').addEventListener('click', () => {
+    // populate demo credentials
+    document.getElementById('loginEmail').value = 'guest@tryon.demo';
+    document.getElementById('loginPassword').value = 'guestdemo';
+    showMsg(loginMsg, 'Guest credentials filled — click Sign in.', 'success');
+  });
+
+  function showMsg(el, text, type='success') {
+    el.className = 'msg show ' + (type==='error' ? 'error' : 'success');
+    el.textContent = text;
+    setTimeout(()=>{ el.classList.remove('show'); }, 4500);
+  }
+
+  // Accessibility: Enter key toggles on buttons in a11y friendly manner by default.
 </script>
 </body>
 </html>
