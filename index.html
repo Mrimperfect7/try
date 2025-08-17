@@ -1,489 +1,218 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Virtual Try-On · Login / Register</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login / Register</title>
 <style>
-  :root{
-    --bg:#071428;
-    --card:#0f1b2a;
-    --accent:#7be5c3;
-    --muted:#9fb3c8;
-    --glass: rgba(255,255,255,0.04);
-    --glass-2: rgba(255,255,255,0.02);
-    --glass-border: rgba(255,255,255,0.06);
-    --glass-blur: 8px;
-    --shadow: 0 10px 30px rgba(2,6,23,0.7);
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0d0d1a;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
   }
 
-  *{box-sizing:border-box; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: #e8f6f4}
-  html,body{height:100%; margin:0; background: radial-gradient(1200px 700px at 10% 20%, rgba(123,229,195,0.06), transparent 8%),
-                                     radial-gradient(800px 500px at 90% 80%, rgba(123,229,195,0.03), transparent 10%),
-                                     var(--bg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
-
-  /* Container */
-  .wrap{
-    min-height:100vh; display:grid; place-items:center; padding:40px;
-    position:relative; overflow:hidden;
+  /* Background particles (dresses) */
+  .dress {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    opacity: 0.7;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.8; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
   }
 
-  /* Background stage for animated floating items */
-  .stage{
-    position:absolute; inset:0; pointer-events:none; z-index:0;
+  /* Auth box */
+  .auth-box {
+    position: relative;
+    z-index: 10;
+    background: rgba(255,255,255,0.08);
+    padding: 30px;
+    border-radius: 12px;
+    width: 320px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
   }
 
-  /* Floating items shared */
-  .float {
-    position:absolute; width:120px; height:120px; opacity:.95; transform-origin:center;
-    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.45));
-  }
-  .float svg{width:100%; height:100%; display:block}
+  h2 { text-align: center; margin-bottom: 20px; }
 
-  /* Different animation durations & sizes for depth */
-  .f-slow{ animation: floatUpDown 12s ease-in-out infinite; transform: translateY(0); }
-  .f-med { animation: floatUpDown 9s ease-in-out infinite reverse; }
-  .f-fast{ animation: floatUpDown 6.5s ease-in-out infinite; }
-
-  .depth-1{ transform: translateZ(0) scale(.9); opacity:.9; }
-  .depth-2{ transform: translateZ(0) scale(1.0); opacity:1; }
-  .depth-3{ transform: translateZ(0) scale(0.78); opacity:.85; }
-
-  @keyframes floatUpDown {
-    0% { transform: translateY(0) rotate(-3deg); }
-    50% { transform: translateY(-26px) rotate(3deg); }
-    100%{ transform: translateY(0) rotate(-3deg); }
+  .input-group {
+    position: relative;
+    margin-bottom: 16px;
   }
 
-  /* subtle horizontal drift per item */
-  .drift1{ animation: driftX 18s linear infinite; }
-  .drift2{ animation: driftX 26s linear infinite reverse; }
-  @keyframes driftX { 0%{ transform: translateX(0) } 50%{ transform: translateX(24px) } 100%{ transform: translateX(0) } }
-
-  /* particle grid / shimmer */
-  .shimmer{
-    position:absolute; inset:0; background-image:
-      radial-gradient(circle at 10% 10%, rgba(255,255,255,0.012) 0 1px, transparent 2px),
-      radial-gradient(circle at 80% 50%, rgba(255,255,255,0.01) 0 1px, transparent 2px);
-    mix-blend-mode:screen; z-index:0; pointer-events:none;
+  label {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 6px;
+    color: #ddd;
   }
 
-  /* card */
-  .card {
-    width:960px; max-width:1000px; min-height:520px; background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.01));
-    border-radius:20px; border:1px solid var(--glass-border);
-    box-shadow: var(--shadow); padding:28px; display:grid; grid-template-columns: 1fr 420px; gap:28px; position:relative; z-index:2;
-    backdrop-filter: blur(var(--glass-blur));
+  input {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 14px;
   }
 
-  /* left - hero / promo */
-  .hero {
-    padding:28px; display:flex; flex-direction:column; justify-content:center; gap:18px;
+  .eye-btn {
+    position: absolute;
+    right: 10px;
+    top: 34px;
+    background: none;
+    border: none;
+    cursor: pointer;
   }
-  .brand {
-    display:flex; align-items:center; gap:14px;
-  }
-  .logo-blob{
-    width:64px; height:64px; border-radius:14px; background: linear-gradient(135deg,var(--accent), #5ad1f5); display:grid; place-items:center; color:#01343a; font-weight:700; font-size:20px;
-    box-shadow: 0 6px 18px rgba(11,40,35,0.35); border:1px solid rgba(255,255,255,0.06);
-  }
-  .title{ font-size:22px; font-weight:700; color:white; letter-spacing:.2px; }
-  .subtitle{ color:var(--muted); font-size:13px; margin-top:-4px; }
-
-  .hero-visual{
-    margin-top:8px; min-height:240px; position:relative; border-radius:14px; overflow:hidden;
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border:1px solid rgba(255,255,255,0.03);
-    display:grid; place-items:center;
+  .eye-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: #333;
   }
 
-  .hero-visual .mock-mirror{
-    width:80%; height:80%; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
-    border:1px dashed rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; gap:12px; flex-direction:column;
-    color:var(--muted); font-size:13px; padding:18px; text-align:center;
+  button.submit {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #7be5c3;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
   }
 
-  /* right - form column */
-  .forms {
-    padding:18px; display:flex; align-items:center; justify-content:center;
+  .switcher {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #ccc;
   }
-
-  .form-shell {
-    width:100%; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.03);
+  .switcher span {
+    color: #7be5c3;
+    cursor: pointer;
+    font-weight: bold;
   }
-
-  h2{ margin:0 0 8px 0; font-size:20px }
-  p.lead{ margin:0 0 18px 0; color:var(--muted); font-size:13px; }
-
-  .input-group{ margin-bottom:14px; position:relative; }
-  label{ display:block; font-size:12px; margin-bottom:6px; color:var(--muted) }
-  input[type="text"], input[type="email"], input[type="password"]{
-    width:100%; padding:12px 44px 12px 12px; background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.04);
-    color: #eaf9f1; outline:none; font-size:14px;
-  }
-  .input-row{ display:flex; gap:10px; }
-  .small{ width:48%; }
-
-  /* eye button */
-  .eye-btn{
-    position:absolute; right:10px; top:36px; width:36px; height:36px; border-radius:8px; display:grid; place-items:center;
-    border:1px solid rgba(255,255,255,0.03); cursor:pointer; background:var(--glass-2);
-  }
-  .eye-btn svg{ width:18px; height:18px; display:block; opacity:.95 }
-
-  .btn{
-    display:inline-block; padding:12px 18px; border-radius:10px; border:none; cursor:pointer; font-weight:600;
-  }
-
-  .btn-primary{
-    background: linear-gradient(90deg,var(--accent), #5ad1f5); color:#01282a; border:0; box-shadow: 0 8px 20px rgba(12,45,42,0.18);
-  }
-  .btn-ghost{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03) }
-
-  .switcher{ display:flex; gap:8px; align-items:center; margin-top:10px; color:var(--muted) }
-  .switcher button{ background:transparent; border:none; color:var(--accent); cursor:pointer; font-weight:700; padding:6px 8px; border-radius:8px; }
-
-  /* little helper text & links */
-  .muted{ color:var(--muted); font-size:13px; margin-top:8px; }
-
-  /* success / error box (client-only) */
-  .msg{ margin-top:10px; padding:10px 12px; border-radius:8px; font-size:13px; display:none; }
-  .msg.show{ display:block; }
-
-  .msg.success{ background: rgba(123,229,195,0.08); color: #bff0da; border:1px solid rgba(123,229,195,0.12) }
-  .msg.error{ background: rgba(255,110,110,0.06); color: #ffdfe0; border:1px solid rgba(255,110,110,0.08) }
-
-  /* responsive */
-  @media (max-width:980px){
-    .card{ grid-template-columns: 1fr; padding:18px; min-height:auto; width:92%; }
-    .hero-visual{ display:none }
-  }
-  @media (max-width:560px){
-    .input-row{ flex-direction:column; }
-    .small{ width:100% }
-  }
-
-  /* tiny floating highlight near form */
-  .glow-orb{
-    position:absolute; right:46%; top:-40px; width:320px; height:320px; border-radius:50%;
-    background: radial-gradient(circle at 30% 30%, rgba(123,229,195,0.08), transparent 25%),
-                radial-gradient(circle at 70% 70%, rgba(90,209,245,0.06), transparent 18% );
-    filter: blur(30px); z-index:1; pointer-events:none; mix-blend-mode:screen;
-  }
-
-  /* subtle footer */
-  .small-foot{ font-size:12px; color:var(--muted); text-align:center; margin-top:14px }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="stage" aria-hidden="true">
-    <!-- Floating decorative SVGs positioned across the background -->
-    <!-- Dress -->
-    <div class="float f-slow depth-1 drift1" style="left:6%; top:12%; width:120px; opacity:0.95">
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M22 6c2 3 6 4 10 4s8-1 10-4c0 0 6 2 6 8s-4 14-8 16c0 0-4 3-8 3s-8-3-8-3c-4-2-8-11-8-16s6-8 6-8z" fill="#ffd7e0"/>
-        <path d="M20 36c2 3 6 6 12 6s10-3 12-6" stroke="#ff9bb2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="32" cy="12" r="1.4" fill="#ff7aa2"/>
-      </svg>
+<!-- Dress Particles -->
+<div id="particles"></div>
+
+<!-- Auth Box -->
+<div class="auth-box">
+  <h2 id="form-title">Login</h2>
+  <form id="login-form">
+    <div class="input-group">
+      <label>Email</label>
+      <input type="email" required>
     </div>
-
-    <!-- Shoe -->
-    <div class="float f-med depth-2 drift2" style="left:78%; top:18%; width:100px; opacity:0.95">
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 38c0-9 9-10 18-10 12 0 20 6 22 8 2 2 4 8-2 12-10 6-44 0-38-10z" fill="#ffe4b8"/>
-        <path d="M12 36c10 2 32 6 38 6" stroke="#ffcc7b" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" required>
+      <button type="button" class="eye-btn" data-target="loginPass">
+        <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
+          <path d="M1 1l22 22"/>
+        </svg>
+      </button>
     </div>
+    <button class="submit" type="submit">Login</button>
+  </form>
 
-    <!-- Hanger -->
-    <div class="float f-fast depth-3 drift1" style="left:36%; top:8%; width:84px; opacity:0.85">
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <path d="M32 6c3 0 5 2 5 4v2" stroke="#8fead1" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-        <path d="M8 32c6-12 36-12 48 0" stroke="#6fe0c4" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M12 32c6 12 36 12 48 0" stroke="#60cdb3" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.18"/>
-      </svg>
+  <form id="register-form" style="display:none">
+    <div class="input-group">
+      <label>Username</label>
+      <input type="text" required>
     </div>
-
-    <!-- Mirror -->
-    <div class="float f-slow depth-2 drift2" style="left:16%; top:58%; width:110px; opacity:0.92">
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <rect x="8" y="6" width="48" height="36" rx="6" fill="#e9fbf6" opacity="0.06"/>
-        <rect x="8" y="6" width="48" height="36" rx="6" stroke="#8fead1" stroke-width="1.4" fill="none"/>
-        <path d="M24 48h16v4H24z" fill="#93e9d7"/>
-      </svg>
+    <div class="input-group">
+      <label>Email</label>
+      <input type="email" required>
     </div>
-
-    <!-- tiny clothing icons scattered -->
-    <div class="float f-med depth-1" style="left:86%; top:74%; width:64px; opacity:0.85">
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 22c4 2 8 2 16 2s12 0 16-2" stroke="#fff" stroke-opacity="0.4" stroke-width="1.6" fill="none"/>
-        <path d="M22 46c6 0 14 1 20 0" stroke="#7be5c3" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-      </svg>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="regPass" required>
+      <button type="button" class="eye-btn" data-target="regPass">
+        <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
+          <path d="M1 1l22 22"/>
+        </svg>
+      </button>
     </div>
+    <button class="submit" type="submit">Register</button>
+  </form>
 
-    <div class="shimmer"></div>
+  <div class="switcher">
+    <span id="switch-to-register">Register</span> | <span id="switch-to-login">Login</span>
   </div>
-
-  <div class="card" role="main" aria-label="Authentication card">
-    <div class="hero" aria-hidden="false">
-      <div class="brand">
-        <div class="logo-blob">VT</div>
-        <div>
-          <div class="title">Virtual Try-On</div>
-          <div class="subtitle">Try clothes & shoes virtually — silky smooth preview animations</div>
-        </div>
-      </div>
-
-      <div class="hero-visual" aria-hidden="true">
-        <div class="mock-mirror">
-          <div style="font-weight:700; color:white">Live Try-On Mirror</div>
-          <div style="color:var(--muted); font-size:13px">Preview outfits at a glance — animated fit & motion</div>
-          <svg width="110" height="110" viewBox="0 0 64 64" style="opacity:0.9">
-            <g>
-              <rect x="0" y="0" width="64" height="64" rx="8" fill="transparent"/>
-              <path d="M18 42c0-14 28-14 28 0" stroke="#7be5c3" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-              <path d="M16 20c4-6 12-6 16-6s12 0 16 6" stroke="#5ad1f5" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <div class="glow-orb" aria-hidden="true"></div>
-    </div>
-
-    <div class="forms" aria-hidden="false">
-      <div class="form-shell" role="form" aria-labelledby="auth-heading">
-
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-          <div>
-            <h2 id="auth-heading">Welcome back</h2>
-            <p class="lead" id="leadText">Sign in to access your try-on history, saved looks and favorites.</p>
-          </div>
-
-          <div style="text-align:right; color:var(--muted); font-size:12px;">
-            <div>Need an account?</div>
-            <div class="switcher"><span class="muted">Or</span><button id="toggleToRegister" aria-controls="registerForm">Register →</button></div>
-          </div>
-        </div>
-
-        <!-- LOGIN FORM -->
-        <form id="loginForm" style="margin-top:12px;">
-          <div class="input-group">
-            <label for="loginEmail">Email</label>
-            <input id="loginEmail" type="email" placeholder="you@domain.com" required />
-          </div>
-
-          <div class="input-group">
-            <label for="loginPassword">Password</label>
-            <input id="loginPassword" type="password" placeholder="Enter your password" required />
-            <button type="button" class="eye-btn" aria-label="Show password" data-target="loginPassword" title="Show/Hide password">
-              <!-- eye (open) icon -->
-              <svg id="eye-open-login" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-              <svg id="eye-closed-login" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
-                <path d="M1 1l22 22"/>
-              </svg>
-            </button>
-          </div>
-
-          <div style="display:flex; gap:10px; align-items:center; margin-top:6px;">
-            <label style="display:flex; gap:8px; align-items:center; font-size:13px">
-              <input id="remember" type="checkbox" style="transform:scale(1.05)" /> <span style="color:var(--muted)">Remember me</span>
-            </label>
-            <a href="#" style="margin-left:auto; color:var(--accent); text-decoration:none; font-weight:600; font-size:13px">Forgot?</a>
-          </div>
-
-          <div style="margin-top:16px; display:flex; gap:8px;">
-            <button class="btn btn-primary" type="submit">Sign in</button>
-            <button type="button" id="quickGuest" class="btn btn-ghost">Try Guest</button>
-          </div>
-
-          <div id="loginMsg" class="msg"></div>
-        </form>
-
-        <!-- REGISTER FORM (hidden by default) -->
-        <form id="registerForm" style="margin-top:12px; display:none;">
-          <div class="input-row">
-            <div class="input-group small">
-              <label for="regName">Full name</label>
-              <input id="regName" type="text" placeholder="Jane Doe" required />
-            </div>
-            <div class="input-group small">
-              <label for="regUser">Username</label>
-              <input id="regUser" type="text" placeholder="username" required />
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="regEmail">Email</label>
-            <input id="regEmail" type="email" placeholder="you@domain.com" required />
-          </div>
-
-          <div class="input-row">
-            <div class="input-group small">
-              <label for="regPassword">Password</label>
-              <input id="regPassword" type="password" placeholder="Create password" required />
-              <button type="button" class="eye-btn" aria-label="Show password" data-target="regPassword" title="Show/Hide password">
-                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
-                  <path d="M1 1l22 22"/>
-                </svg>
-              </button>
-            </div>
-
-            <div class="input-group small">
-              <label for="regConfirm">Confirm</label>
-              <input id="regConfirm" type="password" placeholder="Confirm password" required />
-              <button type="button" class="eye-btn" aria-label="Show confirm password" data-target="regConfirm" title="Show/Hide password">
-                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="#eaf9f1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
-                  <path d="M1 1l22 22"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; gap:8px; margin-top:8px;">
-            <div style="color:var(--muted); font-size:13px">By registering you agree to <a href="#" style="color:var(--accent); text-decoration:none">terms</a>.</div>
-            <div style="display:flex; gap:8px;">
-              <button class="btn btn-ghost" type="button" id="backToLogin">Back</button>
-              <button class="btn btn-primary" type="submit">Create account</button>
-            </div>
-          </div>
-
-          <div id="registerMsg" class="msg"></div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="small-foot">Built for demo • Virtual Try-On theme • Password toggle with eye icon</div>
-
 </div>
 
 <script>
-  // Toggle forms
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-  const toggleToRegister = document.getElementById('toggleToRegister');
-  const backToLogin = document.getElementById('backToLogin');
-  const leadText = document.getElementById('leadText');
-
-  toggleToRegister.addEventListener('click', () => {
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'block';
-    document.getElementById('auth-heading').innerText = 'Create account';
-    leadText.innerText = 'Make an account to save looks, favorites and your try-on snapshots.';
-  });
-  backToLogin.addEventListener('click', () => {
-    registerForm.style.display = 'none';
-    loginForm.style.display = 'block';
-    document.getElementById('auth-heading').innerText = 'Welcome back';
-    leadText.innerText = 'Sign in to access your try-on history, saved looks and favorites.';
-  });
-
-  // Eye toggles - support multiple buttons by data-target or same-form open/close
-  document.querySelectorAll('.eye-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.getAttribute('data-target');
-      if (!targetId) return;
-      const input = document.getElementById(targetId);
-      if (!input) return;
-      const isPwd = input.type === 'password';
-      input.type = isPwd ? 'text' : 'password';
-
-      // toggle icons inside this button
-      const svgOpen = btn.querySelector('[id^="eye-open"], .eye-open');
-      const svgClosed = btn.querySelector('[id^="eye-closed"], .eye-closed');
-      if (svgOpen && svgClosed) {
-        if (isPwd) { svgOpen.style.display = 'none'; svgClosed.style.display = ''; }
-        else { svgOpen.style.display = ''; svgClosed.style.display = 'none'; }
-      }
-      // accessibility label update
-      btn.setAttribute('aria-label', input.type === 'password' ? 'Show password' : 'Hide password');
-    });
-  });
-
-  // A special eye toggle for login's two svg elements that are siblings inside the button:
-  // Hook to sync icons properly on page load if needed.
-  (function syncLoginEye(){
-    const loginEyeBtn = document.querySelector('#loginForm .eye-btn');
-    if (!loginEyeBtn) return;
-    loginEyeBtn.addEventListener('click', () => {
-      const openI = document.getElementById('eye-open-login');
-      const closedI = document.getElementById('eye-closed-login');
-      const input = document.getElementById(loginEyeBtn.dataset.target);
-      if (!input) return;
-      if (input.type === 'password') { openI.style.display = ''; closedI.style.display = 'none'; }
-      else { openI.style.display = 'none'; closedI.style.display = ''; }
-    });
-  })();
-
-  // Client-only "fake" auth behavior for demo
-  const loginMsg = document.getElementById('loginMsg');
-  const registerMsg = document.getElementById('registerMsg');
-
-  loginForm.addEventListener('submit', e => {
-    e.preventDefault();
-    // fake validation
-    const email = document.getElementById('loginEmail').value.trim();
-    const pwd = document.getElementById('loginPassword').value.trim();
-    if (!email || !pwd) {
-      showMsg(loginMsg, 'Please enter email and password.', 'error'); return;
-    }
-    // demo success
-    showMsg(loginMsg, 'Signed in — demo mode. Redirecting to try-on...', 'success');
-    // NOTE: This is a demo: real implementation should call backend API.
-  });
-
-  registerForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const name = document.getElementById('regName').value.trim();
-    const user = document.getElementById('regUser').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const pw = document.getElementById('regPassword').value;
-    const cpw = document.getElementById('regConfirm').value;
-    if (!name || !user || !email || !pw || !cpw) {
-      showMsg(registerMsg, 'Fill all fields.', 'error'); return;
-    }
-    if (pw !== cpw) { showMsg(registerMsg, 'Passwords do not match.', 'error'); return; }
-    if (pw.length < 6) { showMsg(registerMsg, 'Password should be at least 6 characters.', 'error'); return; }
-    showMsg(registerMsg, 'Account created (demo). You can now sign in.', 'success');
-    // auto-switch to login after a short delay (demo)
-    setTimeout(()=> {
-      backToLogin.click();
-    }, 900);
-  });
-
-  document.getElementById('quickGuest').addEventListener('click', () => {
-    // populate demo credentials
-    document.getElementById('loginEmail').value = 'guest@tryon.demo';
-    document.getElementById('loginPassword').value = 'guestdemo';
-    showMsg(loginMsg, 'Guest credentials filled — click Sign in.', 'success');
-  });
-
-  function showMsg(el, text, type='success') {
-    el.className = 'msg show ' + (type==='error' ? 'error' : 'success');
-    el.textContent = text;
-    setTimeout(()=>{ el.classList.remove('show'); }, 4500);
+  // Dress particles
+  const particles = document.getElementById("particles");
+  for (let i=0; i<20; i++) {
+    let dress = document.createElement("div");
+    dress.className = "dress";
+    dress.style.left = Math.random()*100 + "vw";
+    dress.style.animationDuration = (6+Math.random()*8) + "s";
+    dress.innerHTML = `
+      <svg viewBox="0 0 64 64" fill="#ffb6c1" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 6c2 3 6 4 10 4s8-1 10-4c0 0 6 2 6 8s-4 14-8 16c0 0-4 3-8 3s-8-3-8-3c-4-2-8-11-8-16s6-8 6-8z"/>
+      </svg>`;
+    particles.appendChild(dress);
   }
 
-  // Accessibility: Enter key toggles on buttons in a11y friendly manner by default.
+  // Toggle forms
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
+  const title = document.getElementById("form-title");
+  document.getElementById("switch-to-register").onclick = () => {
+    loginForm.style.display = "none";
+    registerForm.style.display = "block";
+    title.textContent = "Register";
+  };
+  document.getElementById("switch-to-login").onclick = () => {
+    registerForm.style.display = "none";
+    loginForm.style.display = "block";
+    title.textContent = "Login";
+  };
+
+  // Eye toggle
+  document.querySelectorAll(".eye-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const input = document.getElementById(btn.dataset.target);
+      const open = btn.querySelector(".eye-open");
+      const closed = btn.querySelector(".eye-closed");
+      if(input.type === "password"){
+        input.type = "text";
+        open.style.display = "none";
+        closed.style.display = "block";
+      } else {
+        input.type = "password";
+        open.style.display = "block";
+        closed.style.display = "none";
+      }
+    });
+  });
 </script>
 </body>
 </html>
