@@ -1,218 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login / Register</title>
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0d0d1a;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #fff;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login & Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+    body {
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+      background:#0d0d0d;
+      color:#fff;
+    }
 
-  /* Background particles (dresses) */
-  .dress {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    opacity: 0.7;
-    animation: float linear infinite;
-  }
-  @keyframes float {
-    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.8; }
-    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
-  }
+    /* Background animation */
+    .particles {
+      position:absolute;
+      width:100%;
+      height:100%;
+      top:0;
+      left:0;
+      overflow:hidden;
+      z-index:-1;
+    }
+    .particles span {
+      position:absolute;
+      display:block;
+      font-size:28px;
+      opacity:0.7;
+      animation: float 15s linear infinite;
+    }
+    @keyframes float {
+      from { transform: translateY(100vh) scale(0.5); opacity:0; }
+      50% { opacity:1; }
+      to { transform: translateY(-10vh) scale(1.2); opacity:0; }
+    }
 
-  /* Auth box */
-  .auth-box {
-    position: relative;
-    z-index: 10;
-    background: rgba(255,255,255,0.08);
-    padding: 30px;
-    border-radius: 12px;
-    width: 320px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    backdrop-filter: blur(8px);
-  }
+    /* Form container */
+    .container {
+      width:350px;
+      background:rgba(255,255,255,0.1);
+      border-radius:15px;
+      padding:30px;
+      backdrop-filter: blur(15px);
+      box-shadow:0 8px 25px rgba(0,0,0,0.5);
+      text-align:center;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from {opacity:0; transform:scale(0.9);}
+      to {opacity:1; transform:scale(1);}
+    }
 
-  h2 { text-align: center; margin-bottom: 20px; }
+    h2 {
+      margin-bottom:20px;
+      font-weight:600;
+    }
+    .input-group {
+      position:relative;
+      margin:15px 0;
+    }
+    .input-group input {
+      width:100%;
+      padding:12px 40px 12px 15px;
+      border:none;
+      border-radius:8px;
+      outline:none;
+      font-size:14px;
+    }
+    .input-group .eye {
+      position:absolute;
+      right:12px;
+      top:50%;
+      transform:translateY(-50%);
+      cursor:pointer;
+      font-size:18px;
+      color:#333;
+    }
 
-  .input-group {
-    position: relative;
-    margin-bottom: 16px;
-  }
+    button {
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#ff6f61;
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+      margin-top:10px;
+      transition:0.3s;
+    }
+    button:hover { background:#ff3b2e; }
 
-  label {
-    font-size: 14px;
-    display: block;
-    margin-bottom: 6px;
-    color: #ddd;
-  }
+    .toggle {
+      margin-top:15px;
+      font-size:14px;
+    }
+    .toggle a {
+      color:#ff6f61;
+      cursor:pointer;
+      text-decoration:none;
+    }
+  </style>
+  <script>
+    function toggleForm(type){
+      document.getElementById('login').style.display = (type==='login')?'block':'none';
+      document.getElementById('register').style.display = (type==='register')?'block':'none';
+    }
+    function togglePassword(id,iconId){
+      let input=document.getElementById(id);
+      let icon=document.getElementById(iconId);
+      if(input.type==='password'){
+        input.type='text';
+        icon.classList.replace("fa-eye","fa-eye-slash");
+      }else{
+        input.type='password';
+        icon.classList.replace("fa-eye-slash","fa-eye");
+      }
+    }
 
-  input {
-    width: 100%;
-    padding: 10px 40px 10px 12px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-    font-size: 14px;
-  }
-
-  .eye-btn {
-    position: absolute;
-    right: 10px;
-    top: 34px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  .eye-btn svg {
-    width: 20px;
-    height: 20px;
-    stroke: #333;
-  }
-
-  button.submit {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background: #7be5c3;
-    color: #000;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  .switcher {
-    text-align: center;
-    margin-top: 14px;
-    font-size: 13px;
-    color: #ccc;
-  }
-  .switcher span {
-    color: #7be5c3;
-    cursor: pointer;
-    font-weight: bold;
-  }
-</style>
+    // Generate floating dress/shoe particles
+    window.onload=function(){
+      const items=["👗","👚","👕","👖","👠","👟","🥿"];
+      const container=document.querySelector('.particles');
+      for(let i=0;i<25;i++){
+        let span=document.createElement('span');
+        span.innerHTML=items[Math.floor(Math.random()*items.length)];
+        span.style.left=Math.random()*100+"%";
+        span.style.animationDuration=(10+Math.random()*10)+"s";
+        span.style.fontSize=(20+Math.random()*25)+"px";
+        container.appendChild(span);
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <div class="particles"></div>
 
-<!-- Dress Particles -->
-<div id="particles"></div>
-
-<!-- Auth Box -->
-<div class="auth-box">
-  <h2 id="form-title">Login</h2>
-  <form id="login-form">
+  <!-- Login Form -->
+  <div class="container" id="login">
+    <h2>Login</h2>
     <div class="input-group">
-      <label>Email</label>
-      <input type="email" required>
+      <input type="email" placeholder="Email">
     </div>
     <div class="input-group">
-      <label>Password</label>
-      <input type="password" id="loginPass" required>
-      <button type="button" class="eye-btn" data-target="loginPass">
-        <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-          <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
-          <path d="M1 1l22 22"/>
-        </svg>
-      </button>
+      <input type="password" id="login-pass" placeholder="Password">
+      <i class="fa fa-eye eye" id="login-eye" onclick="togglePassword('login-pass','login-eye')"></i>
     </div>
-    <button class="submit" type="submit">Login</button>
-  </form>
-
-  <form id="register-form" style="display:none">
-    <div class="input-group">
-      <label>Username</label>
-      <input type="text" required>
-    </div>
-    <div class="input-group">
-      <label>Email</label>
-      <input type="email" required>
-    </div>
-    <div class="input-group">
-      <label>Password</label>
-      <input type="password" id="regPass" required>
-      <button type="button" class="eye-btn" data-target="regPass">
-        <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-          <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.86 20.86 0 0 1 5.2-5.94"/>
-          <path d="M1 1l22 22"/>
-        </svg>
-      </button>
-    </div>
-    <button class="submit" type="submit">Register</button>
-  </form>
-
-  <div class="switcher">
-    <span id="switch-to-register">Register</span> | <span id="switch-to-login">Login</span>
+    <button>Login</button>
+    <div class="toggle">Don’t have an account? <a onclick="toggleForm('register')">Register</a></div>
   </div>
-</div>
 
-<script>
-  // Dress particles
-  const particles = document.getElementById("particles");
-  for (let i=0; i<20; i++) {
-    let dress = document.createElement("div");
-    dress.className = "dress";
-    dress.style.left = Math.random()*100 + "vw";
-    dress.style.animationDuration = (6+Math.random()*8) + "s";
-    dress.innerHTML = `
-      <svg viewBox="0 0 64 64" fill="#ffb6c1" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22 6c2 3 6 4 10 4s8-1 10-4c0 0 6 2 6 8s-4 14-8 16c0 0-4 3-8 3s-8-3-8-3c-4-2-8-11-8-16s6-8 6-8z"/>
-      </svg>`;
-    particles.appendChild(dress);
-  }
-
-  // Toggle forms
-  const loginForm = document.getElementById("login-form");
-  const registerForm = document.getElementById("register-form");
-  const title = document.getElementById("form-title");
-  document.getElementById("switch-to-register").onclick = () => {
-    loginForm.style.display = "none";
-    registerForm.style.display = "block";
-    title.textContent = "Register";
-  };
-  document.getElementById("switch-to-login").onclick = () => {
-    registerForm.style.display = "none";
-    loginForm.style.display = "block";
-    title.textContent = "Login";
-  };
-
-  // Eye toggle
-  document.querySelectorAll(".eye-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const input = document.getElementById(btn.dataset.target);
-      const open = btn.querySelector(".eye-open");
-      const closed = btn.querySelector(".eye-closed");
-      if(input.type === "password"){
-        input.type = "text";
-        open.style.display = "none";
-        closed.style.display = "block";
-      } else {
-        input.type = "password";
-        open.style.display = "block";
-        closed.style.display = "none";
-      }
-    });
-  });
-</script>
+  <!-- Register Form -->
+  <div class="container" id="register" style="display:none;">
+    <h2>Register</h2>
+    <div class="input-group">
+      <input type="text" placeholder="Full Name">
+    </div>
+    <div class="input-group">
+      <input type="email" placeholder="Email">
+    </div>
+    <div class="input-group">
+      <input type="password" id="reg-pass" placeholder="Password">
+      <i class="fa fa-eye eye" id="reg-eye" onclick="togglePassword('reg-pass','reg-eye')"></i>
+    </div>
+    <button>Register</button>
+    <div class="toggle">Already have an account? <a onclick="toggleForm('login')">Login</a></div>
+  </div>
 </body>
 </html>
